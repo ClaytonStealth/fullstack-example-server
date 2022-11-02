@@ -1,4 +1,5 @@
 var express = require("express");
+const { uuid } = require("uuidv4");
 var router = express.Router();
 
 const { db } = require("../mongo");
@@ -41,11 +42,19 @@ const sampleBlogs = [
   },
 ];
 
-/* GET users listing. */
+/* GET blogs listing. */
 router.get("/all", async (req, res, next) => {
+  const limit = Number(req.query.limit);
+  const page = Number(req.query.page);
+  console.log("req query", req.query);
   try {
-    const blogs = await db().collection("posts").find({}).toArray();
-    console.log(blogs);
+    const blogs = await db()
+      .collection("posts")
+      .find({})
+      .limit(limit)
+      .skip(page)
+      .toArray();
+
     res.json({
       success: true,
       blogs,
@@ -60,12 +69,56 @@ router.get("/all", async (req, res, next) => {
   }
 });
 
-router.get("/get-one/:id", async (req, res, next) => {
+router.get("/get-one/:id", async (req, res) => {
   try {
-    const blog = await db().collection("posts").findOne({ id: req.params.id });
+    const idParam = req.params.id;
+    const blog = await db().collection("posts").findOne({ id: idParam });
     res.json({
       success: true,
       blog,
+    });
+  } catch (err) {
+    console.log(err);
+    res.json({
+      success: false,
+      error: err.toString(),
+    });
+  }
+});
+
+router.post("/create-one", async (req, res) => {
+  try {
+    // const newBlog = req.body;
+    const newBlog = {
+      ...req.body,
+      createdAt: new Date(),
+      lastModified: new Date(),
+      id: uuid(),
+    };
+    const result = await db().collection("posts").insertOne(newBlog);
+    res.json({
+      success: true,
+      result,
+    });
+  } catch (err) {
+    console.log(err);
+    res.json({
+      success: false,
+      error: err.toString(),
+    });
+  }
+});
+
+router.put("/update-one/:id", async (req, res) => {
+  try {
+    const idParam = req.params.id;
+    const newBlog = req.body;
+    const result = await db()
+      .collection("posts")
+      .updateOne({ id: idParam }, { $set: newBlog });
+    res.json({
+      success: true,
+      result,
     });
   } catch (err) {
     console.log(err);

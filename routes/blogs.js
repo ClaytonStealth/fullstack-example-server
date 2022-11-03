@@ -130,4 +130,21 @@ router.put("/update-one/:id", async (req, res) => {
   }
 });
 
+router.delete("/delete-one/:id", async (req, res) => {
+  try {
+    const idParam = req.params.id;
+    const result = await db().collection("posts").deleteOne({ id: idParam });
+    res.json({
+      success: true,
+      result,
+    });
+  } catch (err) {
+    console.log(err);
+    res.json({
+      success: false,
+      error: err.toString(),
+    });
+  }
+});
+
 module.exports = router;

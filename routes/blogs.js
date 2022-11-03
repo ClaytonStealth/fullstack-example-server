@@ -46,13 +46,14 @@ const sampleBlogs = [
 router.get("/all", async (req, res, next) => {
   const limit = Number(req.query.limit);
   const page = Number(req.query.page);
+  const skip = (page - 1) * limit;
   console.log("req query", req.query);
   try {
     const blogs = await db()
       .collection("posts")
       .find({})
       .limit(limit)
-      .skip(page)
+      .skip(skip)
       .toArray();
 
     res.json({
